@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - kafka-network
+
+  kafka1:
+    image: bitnami/kafka:latest
+    container_name: kafka1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - kafka-network
+
+  kafka2:
+    image: bitnami/kafka:latest
+    container_name: kafka2
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9092"
+    environment:
+      - KAFKA_BROKER_ID=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - kafka-network
+
+  kafka3:
+    image: bitnami/kafka:latest
+    container_name: kafka3
+    depends_on:
+      - zookeeper
+    ports:
+      - "9094:9092"
+    environment:
+      - KAFKA_BROKER_ID=3
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka3:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - kafka-network
+
+  kafkadrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafkadrop
+    ports:
+      - "9000:9000"
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    environment:
+      - KAFKA_BROKER_CONNECT=kafka1:9092,kafka2:9093,kafka3:9094
+    networks:
+      - kafka-network
+
+networks:
+  kafka-network:
+    name: kafka-network
+    driver: bridge
+

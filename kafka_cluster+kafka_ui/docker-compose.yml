@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  kafka-controller:
+    image: apache/kafka:latest
+    container_name: kafka-controller
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-controller:9092
+      KAFKA_CONTROLLER_QUORUM_ELECTION_TIMEOUT_MS: 1000
+      KAFKA_CONTROLLER_QUORUM_FETCH_TIMEOUT_MS: 1000
+    ports:
+      - "9092:9092"
+
+  kafka-broker-1:
+    image: apache/kafka:latest
+    container_name: kafka-broker-1
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: BROKER://:9094
+      KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-broker-1:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-controller:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+    ports:
+      - "9094:9094"
+
+  kafka-broker-2:
+    image: apache/kafka:latest
+    container_name: kafka-broker-2
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: BROKER://:9095
+      KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-broker-2:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-controller:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+    ports:
+      - "9095:9095"
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafka-ui
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-broker-1:9094,kafka-broker-2:9095
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka-controller
+      - kafka-broker-1
+      - kafka-broker-2
