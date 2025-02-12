@@ -22,7 +22,7 @@ services:
     image: apache/kafka:latest
     container_name: kafka-broker-1
     environment:
-      KAFKA_NODE_ID: 1
+      KAFKA_NODE_ID: 11
       # Broker'ın rolü 
       KAFKA_PROCESS_ROLES: broker
       # Broker'lar arası iletişimde kullanılacak port 9093 olarak ayarlandı.
@@ -38,6 +38,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       # Broker'lar arası iletişimde kullanılacak dinleyici adı belirtildi.
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      PATH: /opt/kafka/bin/:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     ports:
       - "9094:9094"
 
@@ -45,7 +46,7 @@ services:
     image: apache/kafka:latest
     container_name: kafka-broker-2
     environment:
-      KAFKA_NODE_ID: 2
+      KAFKA_NODE_ID: 12
       KAFKA_PROCESS_ROLES: broker
       KAFKA_LISTENERS: INTERNAL://:9093,EXTERNAL://:9095
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-broker-2:9093,EXTERNAL://kafka-broker-2:9095
@@ -53,8 +54,25 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-controller:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      PATH: /opt/kafka/bin/:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     ports:
       - "9095:9095"
+
+  kafka-broker-3:
+    image: apache/kafka:latest
+    container_name: kafka-broker-3
+    environment:
+      KAFKA_NODE_ID: 13
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: INTERNAL://:9093,EXTERNAL://:9096
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-broker-3:9093,EXTERNAL://kafka-broker-3:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-controller:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      PATH: /opt/kafka/bin/:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    ports:
+      - "9096:9096"
 
   kafka-ui:
     image: ghcr.io/kafbat/kafka-ui:latest
@@ -63,10 +81,11 @@ services:
       KAFKA_CLUSTERS_0_NAME: local-kafka
       # KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS ayarı güncellendi. 
       # Broker'ların dış dinleyicileri (EXTERNAL) kullanılacak şekilde ayarlandı.
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-broker-1:9094,kafka-broker-2:9095
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-broker-1:9094,kafka-broker-2:9095,kafka-broker-3:9096
     ports:
       - "8080:8080"
     depends_on:
       - kafka-controller
       - kafka-broker-1
       - kafka-broker-2
+      - kafka-broker-3
